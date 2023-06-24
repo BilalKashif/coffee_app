@@ -1,0 +1,106 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../utils/app_theme_data.dart';
+
+class ProfileView extends StatefulWidget {
+  const ProfileView({super.key});
+
+  @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+      ),
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 30.w),
+        child: Column(
+          children: [
+            profileItemTile(
+              title: 'Full name',
+              text: 'Bilal Kashif',
+              iconPath: 'assets/images/user_icon.png',
+            ),
+            profileItemTile(
+              title: 'Phone number',
+              text: 'Bilal Kashif',
+              iconPath: 'assets/images/telephone_icon.png',
+            ),
+            profileItemTile(
+              title: 'Email',
+              text: 'Bilal Kashif',
+              iconPath: 'assets/images/message_icon.png',
+            ),
+            profileItemTile(
+              title: 'Address',
+              text: 'Bilal Kashif',
+              iconPath: 'assets/images/location_icon.png',
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget profileItemTile(
+      {required String title, required String text, required String iconPath}) {
+    return Padding(
+      padding: EdgeInsets.all(10.sp),
+      child: Row(
+        children: [
+          Container(
+            height: 42.sp,
+            width: 42.sp,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: grey,
+            ),
+            child: Center(
+              child: SizedBox(
+                height: 20.h,
+                child: Image.asset(iconPath),
+              ),
+            ),
+          ),
+          SizedBox(width: 15.w),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: grey,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10.sp,
+                ),
+              ),
+              SizedBox(
+                width: 150.w,
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    color: green,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.sp,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Expanded(child: SizedBox(height: 1)),
+          SizedBox(
+            height: 20.h,
+            width: 20.w,
+            child: Image.asset('assets/images/edit_icon.png'),
+          ),
+        ],
+      ),
+    );
+  }
+}
