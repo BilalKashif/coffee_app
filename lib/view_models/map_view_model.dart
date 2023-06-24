@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:coffee_app/data/current_user_data.dart';
 import 'package:coffee_app/models/coffee_shop_model.dart';
+import 'package:coffee_app/utils/app_theme_data.dart';
 import 'package:coffee_app/utils/distance_detector.dart';
 import 'package:coffee_app/utils/random_location_genrator.dart';
 import 'package:coffee_app/utils/widgets/map_markers.dart';
@@ -16,8 +18,8 @@ enum LocationState {
 
 enum ShopLocation {
   oneKm,
-  twoKm,
   threeKm,
+  fiveKm,
 }
 
 class MapViewModel extends ChangeNotifier {
@@ -32,6 +34,7 @@ class MapViewModel extends ChangeNotifier {
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   CollectionReference coffeeShopsCollection =
       FirebaseFirestore.instance.collection('coffee_shops');
+  WriteBatch batch = FirebaseFirestore.instance.batch();
   //--------------------------------------------------------------
 
   /*
@@ -42,11 +45,17 @@ class MapViewModel extends ChangeNotifier {
 
   Set<Marker> mapMarkers = {};
 
+  Set<Circle> mapCircle = {};
+
+  ShopLocation selectedLocation = ShopLocation.oneKm;
+
+  List<CoffeeShopModel>? selectedShopList;
+
   //------------------------------------------------------------------
 
   List<CoffeeShopModel>? oneKmShops;
-  List<CoffeeShopModel>? twoKmShops;
   List<CoffeeShopModel>? threeKmShops;
+  List<CoffeeShopModel>? fiveKmShops;
 
   Future<void> requestPermission() async {
     permissionStatus = await location.hasPermission();
@@ -90,17 +99,22 @@ class MapViewModel extends ChangeNotifier {
         markerId: 'current_location',
       ),
     );
+    currentLocation = LatLng(locationData.latitude!, locationData.longitude!);
+    CurrentUserData.currentUser!.addressLocation =
+        GeoPoint(locationData.latitude!, locationData.longitude!);
     if (!randomLocationsAdded) {
       //-----Get three random locations according to the current location
       LatLng center = LatLng(locationData.latitude!, locationData.longitude!);
       //-----1km => 1000m
       LatLng location1 = generateRandomLatLng(center, 1000);
       //-----5km => 5000m
-      LatLng location2 = generateRandomLatLng(center, 5000);
+      LatLng location2 = generateRandomLatLng(center, 3000);
       //-----10km => 10000m
-      LatLng location3 = generateRandomLatLng(center, 10000);
+      LatLng location3 = generateRandomLatLng(center, 5000);
 
       await setRandomLocations(location1, location2, location3);
+
+      await setNearByShops();
 
       randomLocationsAdded = true;
     }
@@ -122,38 +136,85 @@ class MapViewModel extends ChangeNotifier {
       shopLocation: GeoPoint(location3.latitude, location3.longitude),
     );
 
+    QuerySnapshot querySnapshot = await coffeeShopsCollection.get();
+    for (var document in querySnapshot.docs) {
+      batch.delete(document.reference);
+    }
+    await batch.commit();
+
     await coffeeShopsCollection.add(shop1.toJson());
     await coffeeShopsCollection.add(shop2.toJson());
     await coffeeShopsCollection.add(shop3.toJson());
   }
 
-  Future<void> setNearByShops({required ShopLocation shopLocation}) async {
-    if (oneKmShops == null || twoKmShops == null || threeKmShops == null) {
+  Future<void> setNearByShops() async {
+    if (oneKmShops == null || threeKmShops == null || fiveKmShops == null) {
       oneKmShops = [];
-      twoKmShops = [];
       threeKmShops = [];
+      fiveKmShops = [];
       QuerySnapshot querySnapshot = await coffeeShopsCollection.get();
       for (var docs in querySnapshot.docs) {
         CoffeeShopModel shopData =
             CoffeeShopModel.fromJson(docs.data() as Map<String, dynamic>);
         var shopDistance = getDistance(
-          currentLocation!,
-          LatLng(
-              shopData.shopLocation.latitude, shopData.shopLocation.longitude),
+          currentLocation!.latitude,
+          currentLocation!.longitude,
+          shopData.shopLocation.latitude,
+          shopData.shopLocation.longitude,
         );
-        if (shopDistance <= 1000) {
+        print('shop Distance: $shopDistance');
+        if (shopDistance <= 1001) {
           oneKmShops!.add(shopData);
-        } 
-        if (shopDistance <= 5000) {
-          twoKmShops!.add(shopData);
-        } 
-        if (shopDistance <= 10000) {
+        }
+        if (shopDistance <= 3001) {
           threeKmShops!.add(shopData);
+        }
+        if (shopDistance <= 5001) {
+          fiveKmShops!.add(shopData);
         }
       }
     }
     notifyListeners();
   }
 
-  
+  Future<void> setMarkers(
+      ShopLocation location, GoogleMapController controller) async {
+    mapCircle.clear();
+    selectedShopList = [];
+    double radius = 0;
+    if (location == ShopLocation.oneKm) {
+      print(controller.getZoomLevel());
+      radius = 1000;
+      selectedShopList = oneKmShops!;
+    } else if (location == ShopLocation.threeKm) {
+      radius = 3000;
+      selectedShopList = threeKmShops!;
+    } else if (location == ShopLocation.fiveKm) {
+      radius = 5000;
+      selectedShopList = fiveKmShops!;
+    }
+    mapMarkers.clear();
+    mapMarkers.add(
+      await getUserMarker(
+          location: currentLocation!, markerId: 'user-location'),
+    );
+    for (CoffeeShopModel markerData in selectedShopList!) {
+      mapMarkers.add(
+        await getShopMarker(
+          location: LatLng(markerData.shopLocation.latitude,
+              markerData.shopLocation.longitude),
+          markerId: markerData.shopName,
+          snippet: markerData.shopName,
+        ),
+      );
+    }
+    mapCircle.add(Circle(
+        circleId: const CircleId('radius'),
+        fillColor: green.withOpacity(0.2),
+        strokeColor: green,
+        strokeWidth: 1,
+        center: currentLocation!,
+        radius: radius));
+    notifyListeners();
+  }
 }

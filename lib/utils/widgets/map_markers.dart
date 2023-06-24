@@ -19,3 +19,23 @@ Future<Marker> getUserMarker(
     ),
   );
 }
+
+Future<Marker> getShopMarker(
+    {required LatLng location,
+    required String markerId,
+    String? title,
+    String? snippet}) async {
+  ByteData imageData =
+      await rootBundle.load('assets/images/shop_marker.png');
+  Uint8List byteList = imageData.buffer.asUint8List();
+  return Marker(
+    markerId: MarkerId(markerId),
+    position: location,
+    icon: BitmapDescriptor.fromBytes(byteList, size: const Size(30, 30)),
+    infoWindow: InfoWindow(
+      title: title,
+      snippet: snippet,
+    ),
+  );
+}
+

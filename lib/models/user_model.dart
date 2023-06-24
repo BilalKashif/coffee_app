@@ -1,16 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
-  final String userName;
-  final String userEmail;
-  final String userId;
-  final String address;
-  final String phoneNumber;
-  final int loyalityPoints;
-  final int loyalityCardNumber;
-  final int cardCurrentCount;
-  final GeoPoint addressLocation;
-  final bool isAddressSetted;
+  String userName;
+  String userEmail;
+  String userId;
+  String address;
+  String phoneNumber;
+  int loyalityPoints;
+  int loyalityCardNumber;
+  int cardCurrentCount;
+  GeoPoint addressLocation;
+  bool isAddressSetted;
   UserModel({
     required this.userName,
     required this.userEmail,
@@ -22,6 +22,7 @@ class UserModel {
     required this.cardCurrentCount,
     required this.addressLocation,
     required this.isAddressSetted,
+
   });
 
   Map<String, dynamic> toJson() {

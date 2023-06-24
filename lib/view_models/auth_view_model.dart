@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:coffee_app/data/current_user_data.dart';
 import 'package:coffee_app/data/response/auth_status.dart';
 import 'package:coffee_app/models/user_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../data/app_exceptions.dart';
-import '../utils/global_variables.dart';
 
 class AuthViewModel extends ChangeNotifier {
   //---------Firebase Instances-------------------------
@@ -40,7 +40,7 @@ class AuthViewModel extends ChangeNotifier {
         addressLocation: const GeoPoint(31.5204,74.3587),
         isAddressSetted: false,
       );
-      currentUser = newUser;
+      CurrentUserData.currentUser = newUser;
       usersCollection.doc(credentials.user!.uid).set(newUser.toJson());
       authStatus = AuthStatus.logedIn;
       notifyListeners();
@@ -63,7 +63,7 @@ class AuthViewModel extends ChangeNotifier {
           email: email, password: password);
       DocumentSnapshot getUser =
           await usersCollection.doc(firebaseAuth.currentUser!.uid).get();
-      currentUser = UserModel.fromJson(getUser.data() as Map<String, dynamic>);
+      CurrentUserData.currentUser = UserModel.fromJson(getUser.data() as Map<String, dynamic>);
       authStatus = AuthStatus.logedIn;
       notifyListeners();
     } on FirebaseAuthException catch (error) {
