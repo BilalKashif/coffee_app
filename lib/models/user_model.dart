@@ -10,7 +10,6 @@ class UserModel {
   int loyalityCardNumber;
   int cardCurrentCount;
   GeoPoint addressLocation;
-  bool isAddressSetted;
   UserModel({
     required this.userName,
     required this.userEmail,
@@ -21,7 +20,7 @@ class UserModel {
     required this.loyalityCardNumber,
     required this.cardCurrentCount,
     required this.addressLocation,
-    required this.isAddressSetted,
+
 
   });
 
@@ -36,7 +35,6 @@ class UserModel {
       'loyalityCardNumber': loyalityCardNumber,
       'cardCurrentCount': cardCurrentCount,
       'addressLocation': addressLocation,
-      'isAddressSetted': isAddressSetted,
     };
   }
 
@@ -51,6 +49,5 @@ class UserModel {
           loyalityCardNumber: json['loyalityCardNumber'],
           cardCurrentCount: json['cardCurrentCount'],
           addressLocation: json['addressLocation'],
-          isAddressSetted: json['isAddressSetted'],
         );
 }

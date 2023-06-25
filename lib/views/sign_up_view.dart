@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
-import '../data/app_exceptions.dart';
 import '../data/response/auth_status.dart';
 import '../utils/app_routes.dart';
 import '../utils/app_theme_data.dart';
-import '../utils/widgets/alert_dialogue.dart';
 import '../utils/widgets/loading_indicator.dart';
 import '../utils/widgets/text_field.dart';
 import '../view_models/auth_view_model.dart';
@@ -133,40 +131,28 @@ class _SignUpViewState extends State<SignUpView> {
                 SizedBox(height: 30.h),
                 Consumer<AuthViewModel>(
                   builder: (providerContext, value, _) {
-                    if (value.authStatus == AuthStatus.logedIn) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        Navigator.pushNamed(context, Routes.mapScreen);
-                      });
-                    }
                     if (value.authStatus == AuthStatus.loading) {
                       return Center(child: loadingIndicator);
                     }
                     return Padding(
-                      padding: EdgeInsets.only(left: 230.w),
-                      child: FloatingActionButton(
+                      padding: EdgeInsets.only(left: 10.w),
+                      child: FloatingActionButton.extended(
+                        label: const Text('Set address and location'),
+                        icon: const Icon(Icons.arrow_forward),
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            //-------Send data--------------------
-                            try {
-                              await value.signUp(
-                                email: emailFieldController.text,
-                                password: passwordFieldController.text,
-                                phoneNumber: phoneNumberFieldController.text,
-                                userName: userNameFieldController.text,
-                              );
-                            } on CustomException catch (error) {
-                              showAlertDialogue(
-                                  context: context,
-                                  title: error.prefix,
-                                  message: error.message);
-                            }
+                            Navigator.pushNamed(
+                              context,
+                              Routes.setLocationScreen,
+                              arguments: {
+                                'userName': userNameFieldController.text,
+                                'mobileNumber': phoneNumberFieldController.text,
+                                'email': emailFieldController.text,
+                                'password': passwordFieldController.text,
+                              },
+                            );
                           }
                         },
-                        child: const Center(
-                          child: Icon(
-                            Icons.arrow_forward,
-                          ),
-                        ),
                       ),
                     );
                   },

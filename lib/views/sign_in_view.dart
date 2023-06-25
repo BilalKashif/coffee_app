@@ -121,7 +121,7 @@ class _SignInViewState extends State<SignInView> {
                     ),
                   ),
                 ),
-                SizedBox(height: 130.h),
+                SizedBox(height: 90.h),
                 Consumer<AuthViewModel>(
                   builder: (providerContext, value, _) {
                     if (value.authStatus == AuthStatus.logedIn) {

@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:coffee_app/models/coffee_shop_model.dart';
 import 'package:coffee_app/utils/app_theme_data.dart';
 import 'package:coffee_app/utils/widgets/alert_dialogue.dart';
 import 'package:coffee_app/utils/widgets/snack_bar.dart';
+import 'package:coffee_app/view_models/location_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -23,184 +25,238 @@ class _MapViewState extends State<MapView> {
   //--------------Google map instences------------------------------------
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
-
-  static const CameraPosition initialCameraPosition = CameraPosition(
-    target: LatLng(31.5204, 74.3587),
-    zoom: 11.5,
-  );
-  //----------------------------------------------------------------------
+  List<CoffeeShopModel> nearByShops = [];
 
   @override
   Widget build(BuildContext context) {
-    MapViewModel mapViewModel =
-        Provider.of<MapViewModel>(context, listen: false);
-    if (mapViewModel.permissionStatus == PermissionStatus.denied) {
-      mapViewModel.requestPermission();
+    LocationViewModel locationViewModel =
+        Provider.of<LocationViewModel>(context);
+    //-------------------------------------------------------------
+
+    if (locationViewModel.permissionStatus == PermissionStatus.denied ||
+        locationViewModel.locationServiceState ==
+            LocationServiceState.disabled) {
+      locationViewModel.requestPermission();
+      locationViewModel.isServieEnabled();
     }
+
+    //------------------------------------------------------------
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Select Coffee shop'),
       ),
       body: Consumer<MapViewModel>(
         builder: (providerContext, provider, _) {
-          return Stack(
+          return Column(
             children: [
               SizedBox(
                 height: 450.h,
                 width: double.infinity,
-                child: GoogleMap(
-                  mapType: MapType.normal,
-                  initialCameraPosition: provider.currentLocation != null
-                      ? CameraPosition(
-                          target: provider.currentLocation!,
-                          zoom: 11.5,
-                        )
-                      : initialCameraPosition,
-                  onMapCreated: (GoogleMapController controller) {
-                    _controller.complete(controller);
-                  },
-                  markers: provider.mapMarkers,
-                  circles: provider.mapCircle,
+                child: Stack(
+                  children: [
+                    GoogleMap(
+                      mapType: MapType.normal,
+                      initialCameraPosition: provider.initialCamerPosition(),
+                      onMapCreated: (GoogleMapController controller) {
+                        _controller.complete(controller);
+                      },
+                      markers: provider.mapMarkers,
+                      circles: provider.mapCircle,
+                    ),
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 20, bottom: 20),
+                        child: FloatingActionButton.extended(
+                          label: const Text('My Location'),
+                          icon: SizedBox(
+                              height: 30,
+                              child: Image.asset(
+                                'assets/images/location_icon.png',
+                                color: Colors.white,
+                              )),
+                          onPressed: () async {
+                            showSnackBar(
+                                context: context,
+                                message: 'Finding location Please wait.');
+                            if (locationViewModel.locationServiceState ==
+                                LocationServiceState.enabled) {
+                              GoogleMapController mapController =
+                                  await _controller.future;
+                              await locationViewModel.getCurrentLocation();
+                              LatLng currentLocation = LatLng(
+                                  locationViewModel
+                                      .currentLocationData!.latitude!,
+                                  locationViewModel
+                                      .currentLocationData!.longitude!);
+                              provider.setCameraLocation(
+                                controller: mapController,
+                                location: currentLocation,
+                                zoomLevel: 17,
+                              );
+                              provider.setLocationMarker(
+                                  location: currentLocation);
+                              if (!provider.randomLocationsAdded) {
+                                await provider
+                                    .setRandomLocations(currentLocation);
+                              }
+                            } else {
+                              showAlertDialogue(
+                                  context: context,
+                                  title: 'Location Error',
+                                  message: 'Location Service is not Enabled');
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              coffeeShopsInfoView(provider),
+              Expanded(
+                child: Container(
+                  color: Colors.white,
+                  child: !provider.randomLocationsAdded
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                size: 50,
+                                color: green,
+                              ),
+                              const Text('Find Current Location First'),
+                            ],
+                          ),
+                        )
+                      : locationViewModel.locationServiceState ==
+                              LocationServiceState.disabled
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.location_off,
+                                    size: 50,
+                                    color: green,
+                                  ),
+                                  const Text('Location is not Enabled.'),
+                                ],
+                              ),
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Container(
+                                  height: 60.h,
+                                  color: green,
+                                  child: Center(
+                                    child: Text(
+                                      'Nearby Shops',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(10.0),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        'Max Distance',
+                                        style: TextStyle(
+                                          color: black,
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const Expanded(child: SizedBox()),
+                                      GroupButton(
+                                        isRadio: true,
+                                        onSelected:
+                                            (value, index, isSelected) async {
+                                          LatLng currentLocation = LatLng(
+                                              locationViewModel
+                                                  .currentLocationData!
+                                                  .latitude!,
+                                              locationViewModel
+                                                  .currentLocationData!
+                                                  .longitude!);
+                                          double radius = 0;
+                                          double zoomLevel = 0;
+                                          GoogleMapController mapController =
+                                              await _controller.future;
+                                          if (index == 0) {
+                                            nearByShops = provider.fourHmShops;
+                                            radius = 400;
+                                            zoomLevel = 15.8;
+                                          } else if (index == 1) {
+                                            nearByShops = provider.sixHmShops;
+                                            radius = 600;
+                                            zoomLevel = 15;
+                                          } else {
+                                            nearByShops = provider.tenHmShops;
+                                            radius = 1000;
+                                            zoomLevel = 14;
+                                          }
+                                          await provider.setCameraLocation(
+                                              controller: mapController,
+                                              location: currentLocation,
+                                              zoomLevel: zoomLevel);
+                                          await provider.setShopMarkers(
+                                              shopList: nearByShops,
+                                              center: currentLocation);
+                                          provider.setCircle(
+                                              radius: radius,
+                                              center: currentLocation);
+                                          setState(() {});
+                                        },
+                                        buttons: const [
+                                          "400 m",
+                                          '600 m',
+                                          '1000 m',
+                                        ],
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                Expanded(
+                                  child: ListView.separated(
+                                    shrinkWrap: true,
+                                    itemCount: nearByShops.length,
+                                    separatorBuilder: (_, __) =>
+                                        const Divider(),
+                                    itemBuilder: (context, int index) {
+                                      return shopTiles(
+                                        shopName: nearByShops[index].shopName,
+                                        shopAddress: nearByShops[index].address,
+                                        shopDistance: nearByShops[index]
+                                            .distance
+                                            .toStringAsFixed(1),
+                                      );
+                                    },
+                                  ),
+                                )
+                              ],
+                            ),
+                ),
+              ),
             ],
           );
         },
       ),
-      floatingActionButton: Align(
-        alignment: Alignment.centerRight,
-        child: FloatingActionButton.extended(
-          label: const Text('My Location'),
-          icon: SizedBox(
-              height: 30,
-              child: Image.asset(
-                'assets/images/location_icon.png',
-                color: Colors.white,
-              )),
-          onPressed: () async {
-            showSnackBar(context: context, message: 'Getting current location');
-            if (await mapViewModel.checkServieEnabled()) {
-              mapViewModel.getCurrentLocation(
-                  controller: await _controller.future);
-            } else {
-              showAlertDialogue(
-                  context: context,
-                  title: 'Error',
-                  message: 'Location Services are not enabled.');
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget coffeeShopsInfoView(MapViewModel provider) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.5,
-      minChildSize: .2,
-      maxChildSize: 0.6,
-      builder: (BuildContext context, ScrollController scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(30),
-              topRight: Radius.circular(30),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: grey.withOpacity(0.5),
-                blurRadius: 5,
-                spreadRadius: 2,
-              )
-            ],
-          ),
-          child: provider.currentLocation == null
-              ? const Center(child: Text('Find Curretn Location First'))
-              : Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 60.h,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: green,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(30),
-                          topRight: Radius.circular(30),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Nearby Shops',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Max Distance',
-                            style: TextStyle(
-                              color: black,
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Expanded(child: SizedBox()),
-                          GroupButton(
-                            isRadio: true,
-                            onSelected: (value, index, isSelected) async {
-                              if (index == 0) {
-                                await provider.setMarkers(ShopLocation.oneKm,
-                                    await _controller.future);
-                              } else if (index == 1) {
-                                await provider.setMarkers(ShopLocation.threeKm,
-                                    await _controller.future);
-                              } else if (index == 2) {
-                                await provider.setMarkers(ShopLocation.fiveKm,
-                                    await _controller.future);
-                              }
-                            },
-                            buttons: const [
-                              "1 Km",
-                              '5 Km',
-                              '10 Km',
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: provider.selectedShopList == null
-                            ? 0
-                            : provider.selectedShopList!.length,
-                        separatorBuilder: (_, __) => const Divider(),
-                        itemBuilder: (context, int index) {
-                          return shopTiles(
-                              shopName:
-                                  provider.selectedShopList![index].shopName);
-                        },
-                      ),
-                    )
-                  ],
-                ),
-        );
-      },
     );
   }
 
   Widget shopTiles({
     required String shopName,
+    required String shopAddress,
+    required String shopDistance,
   }) {
     return Padding(
       padding: const EdgeInsets.all(10),
@@ -224,13 +280,29 @@ class _MapViewState extends State<MapView> {
             ),
           ),
           const SizedBox(width: 10),
-          Text(
-            shopName,
-            style: TextStyle(
-              color: green,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$shopName $shopDistance m',
+                style: TextStyle(
+                  color: green,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16.sp,
+                ),
+              ),
+              SizedBox(
+                width: 220.w,
+                child: Text(
+                  shopAddress,
+                  style: TextStyle(
+                    color: grey,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.sp,
+                  ),
+                ),
+              ),
+            ],
           ),
           const Expanded(child: SizedBox()),
           OutlinedButton(

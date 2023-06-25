@@ -11,8 +11,10 @@ Widget customTextField({
   Function()? ontapPrefixIcon,
   bool? obscureText,
   TextInputType? keyBoardType,
+  bool? isEnabled,
 }) {
   return TextFormField(
+    enabled: isEnabled ?? true,
     controller: controller,
     obscureText: obscureText ?? false,
     keyboardType: keyBoardType,

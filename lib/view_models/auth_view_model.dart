@@ -19,6 +19,8 @@ class AuthViewModel extends ChangeNotifier {
       {required String email,
       required String password,
       required String phoneNumber,
+      required GeoPoint addressLocation,
+      required String address,
       required String userName}) async {
     authStatus = AuthStatus.loading;
     notifyListeners();
@@ -33,12 +35,11 @@ class AuthViewModel extends ChangeNotifier {
         userEmail: email,
         userId: credentials.user!.uid,
         phoneNumber: phoneNumber,
-        address: '',
+        address: address,
         loyalityPoints: 0,
         loyalityCardNumber: 0,
         cardCurrentCount: 0,
-        addressLocation: const GeoPoint(31.5204,74.3587),
-        isAddressSetted: false,
+        addressLocation: addressLocation,
       );
       CurrentUserData.currentUser = newUser;
       usersCollection.doc(credentials.user!.uid).set(newUser.toJson());
