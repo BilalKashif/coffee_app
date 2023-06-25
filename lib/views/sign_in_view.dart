@@ -124,11 +124,7 @@ class _SignInViewState extends State<SignInView> {
                 SizedBox(height: 90.h),
                 Consumer<AuthViewModel>(
                   builder: (providerContext, value, _) {
-                    if (value.authStatus == AuthStatus.logedIn) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        Navigator.pushNamed(context, Routes.mapScreen);
-                      });
-                    }
+                    
                     if (value.authStatus == AuthStatus.loading) {
                       return Center(child: loadingIndicator);
                     }
@@ -143,6 +139,7 @@ class _SignInViewState extends State<SignInView> {
                                 email: emailFieldController.text,
                                 password: passwordFieldController.text,
                               );
+                              Navigator.pushNamed(context, Routes.mapScreen);
                             } on CustomException catch (error) {
                               showAlertDialogue(
                                   context: context,

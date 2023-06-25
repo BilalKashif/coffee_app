@@ -17,7 +17,7 @@ class MapViewModel extends ChangeNotifier {
   /*
   As this is the demo application So,I Just add three random co-ordinates 
   400m, 600m and 1000m away from the curretn detected location. Which repersents
-  as a Coffee Shops nearby my location.
+  as a Coffee Shops nearby my location.,
   */
   List<CoffeeShopModel> fourHmShops = [];
   List<CoffeeShopModel> sixHmShops = [];
@@ -97,7 +97,7 @@ class MapViewModel extends ChangeNotifier {
   }
 
   Future<void> setRandomLocations(LatLng center) async {
-    //-----Get three random locations according to the current location
+    //-----Get three random locations according to the current location and given radius
     //-----400m
     LatLng location1 = generateRandomLatLng(center, 400);
     //-----600m
@@ -107,28 +107,31 @@ class MapViewModel extends ChangeNotifier {
 
     //------Making Objects of each location
     CoffeeShopModel shop1 = CoffeeShopModel(
-        shopName: 'Albert Coffee Shop',
-        shopLocation: GeoPoint(location1.latitude, location1.longitude),
-        address:
-            await getLocationAddress(location1.latitude, location1.longitude),
-        distance: getDistance(center.latitude, center.longitude,
-            location1.latitude, location1.longitude));
+      shopName: 'Albert Coffee Shop',
+      shopLocation: GeoPoint(location1.latitude, location1.longitude),
+      address:
+          await getLocationAddress(location1.latitude, location1.longitude),
+      distance: getDistance(center.latitude, center.longitude,
+          location1.latitude, location1.longitude),
+    );
     //---------------------------------------------------
     CoffeeShopModel shop2 = CoffeeShopModel(
-        shopName: 'Steve Coffee Shop',
-        shopLocation: GeoPoint(location2.latitude, location2.longitude),
-        address:
-            await getLocationAddress(location2.latitude, location2.longitude),
-        distance: getDistance(center.latitude, center.longitude,
-            location2.latitude, location2.longitude));
+      shopName: 'Steve Coffee Shop',
+      shopLocation: GeoPoint(location2.latitude, location2.longitude),
+      address:
+          await getLocationAddress(location2.latitude, location2.longitude),
+      distance: getDistance(center.latitude, center.longitude,
+          location2.latitude, location2.longitude),
+    );
     //---------------------------------------------------
     CoffeeShopModel shop3 = CoffeeShopModel(
-        shopName: 'Ben Coffee Shop',
-        shopLocation: GeoPoint(location3.latitude, location3.longitude),
-        address:
-            await getLocationAddress(location3.latitude, location3.longitude),
-        distance: getDistance(center.latitude, center.longitude,
-            location3.latitude, location3.longitude));
+      shopName: 'Ben Coffee Shop',
+      shopLocation: GeoPoint(location3.latitude, location3.longitude),
+      address:
+          await getLocationAddress(location3.latitude, location3.longitude),
+      distance: getDistance(center.latitude, center.longitude,
+          location3.latitude, location3.longitude),
+    );
 
     fourHmShops = [shop1];
     sixHmShops = [shop1, shop2];

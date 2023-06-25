@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:coffee_app/data/current_user_data.dart';
 import 'package:coffee_app/models/coffee_shop_model.dart';
 import 'package:coffee_app/utils/app_theme_data.dart';
 import 'package:coffee_app/utils/widgets/alert_dialogue.dart';
@@ -12,6 +13,7 @@ import 'package:group_button/group_button.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
+import '../utils/app_routes.dart';
 import '../view_models/map_view_model.dart';
 
 class MapView extends StatefulWidget {
@@ -238,6 +240,7 @@ class _MapViewState extends State<MapView> {
                                         shopDistance: nearByShops[index]
                                             .distance
                                             .toStringAsFixed(1),
+                                        index: index,
                                       );
                                     },
                                   ),
@@ -257,6 +260,7 @@ class _MapViewState extends State<MapView> {
     required String shopName,
     required String shopAddress,
     required String shopDistance,
+    required int index,
   }) {
     return Padding(
       padding: const EdgeInsets.all(10),
@@ -306,7 +310,10 @@ class _MapViewState extends State<MapView> {
           ),
           const Expanded(child: SizedBox()),
           OutlinedButton(
-            onPressed: () {},
+            onPressed: () {
+              CurrentUserData.selectedShop = nearByShops[index];
+              Navigator.pushNamed(context, Routes.homeScreen);
+            },
             child: const Text('Select'),
           )
         ],

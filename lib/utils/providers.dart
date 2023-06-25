@@ -1,4 +1,5 @@
 import 'package:coffee_app/view_models/map_view_model.dart';
+import 'package:coffee_app/view_models/order_view_model.dart';
 import 'package:coffee_app/view_models/profile_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
@@ -11,5 +12,7 @@ List<SingleChildWidget> providers = [
   ChangeNotifierProvider<ProfileViewModel>(
       create: (context) => ProfileViewModel()),
   ChangeNotifierProvider<MapViewModel>(create: (context) => MapViewModel()),
-  ChangeNotifierProvider<LocationViewModel>(create: (context) => LocationViewModel()),
+  ChangeNotifierProvider<LocationViewModel>(
+      create: (context) => LocationViewModel()),
+  ChangeNotifierProvider<OrderViewModel>(create: (context) => OrderViewModel()),
 ];

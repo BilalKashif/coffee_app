@@ -1,6 +1,5 @@
 import 'package:geocoding/geocoding.dart';
 
-import '../../data/app_exceptions.dart';
 
 Future<String> getLocationAddress(double latitude, double longitude) async {
   String address;

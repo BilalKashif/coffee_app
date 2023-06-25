@@ -48,6 +48,7 @@ dependencies:
   location: ^4.4.0
   group_button: ^5.3.0
   geocoding: ^2.1.0
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:

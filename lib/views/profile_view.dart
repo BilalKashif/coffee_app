@@ -1,3 +1,4 @@
+import 'package:coffee_app/data/current_user_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -23,22 +24,22 @@ class _ProfileViewState extends State<ProfileView> {
           children: [
             profileItemTile(
               title: 'Full name',
-              text: 'Bilal Kashif',
+              text: CurrentUserData.currentUser!.userName,
               iconPath: 'assets/images/user_icon.png',
             ),
             profileItemTile(
               title: 'Phone number',
-              text: 'Bilal Kashif',
+              text: CurrentUserData.currentUser!.phoneNumber,
               iconPath: 'assets/images/telephone_icon.png',
             ),
             profileItemTile(
               title: 'Email',
-              text: 'Bilal Kashif',
+              text: CurrentUserData.currentUser!.userEmail,
               iconPath: 'assets/images/message_icon.png',
             ),
             profileItemTile(
               title: 'Address',
-              text: 'Bilal Kashif',
+              text: CurrentUserData.currentUser!.address,
               iconPath: 'assets/images/location_icon.png',
             )
           ],
@@ -81,7 +82,7 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
               ),
               SizedBox(
-                width: 150.w,
+                width: 170.w,
                 child: Text(
                   text,
                   style: TextStyle(
