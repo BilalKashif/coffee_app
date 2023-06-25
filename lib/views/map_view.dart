@@ -16,14 +16,14 @@ import 'package:provider/provider.dart';
 import '../utils/app_routes.dart';
 import '../view_models/map_view_model.dart';
 
-class MapView extends StatefulWidget {
-  const MapView({super.key});
+class MapScreenView extends StatefulWidget {
+  const MapScreenView({super.key});
 
   @override
-  State<MapView> createState() => _MapViewState();
+  State<MapScreenView> createState() => _MapScreenViewState();
 }
 
-class _MapViewState extends State<MapView> {
+class _MapScreenViewState extends State<MapScreenView> {
   //--------------Google map instences------------------------------------
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();

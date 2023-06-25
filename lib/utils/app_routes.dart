@@ -42,7 +42,7 @@ class Routes {
       setLocationScreen: (_) => const SetLocationView(),
       forgetPasswordScreen: (_) => const ForgotPasswordView(),
       otpVerificationScreen: (_) => const OtpVerificationView(),
-      mapScreen: (_) => const MapView(),
+      mapScreen: (_) => const MapScreenView(),
       profileScreen: (_) => const ProfileView(),
       homeScreen: (_) => const HomeView(),
       shopInformationScreen: (_) => const ShopInformationView(),

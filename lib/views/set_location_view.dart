@@ -3,14 +3,17 @@ import 'package:coffee_app/data/app_exceptions.dart';
 import 'package:coffee_app/data/response/auth_status.dart';
 import 'package:coffee_app/utils/widgets/alert_dialogue.dart';
 import 'package:coffee_app/utils/widgets/loading_indicator.dart';
+import 'package:coffee_app/utils/widgets/snack_bar.dart';
 import 'package:coffee_app/utils/widgets/text_field.dart';
 import 'package:coffee_app/view_models/auth_view_model.dart';
 import 'package:coffee_app/view_models/location_view_model.dart';
+import 'package:coffee_app/views/map_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
+import '../utils/app_routes.dart';
 import '../utils/app_theme_data.dart';
 
 class SetLocationView extends StatefulWidget {
@@ -57,103 +60,116 @@ class _SetLocationViewState extends State<SetLocationView> {
       appBar: AppBar(),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 30.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 100.h),
-            Text(
-              'Set Location',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 22.sp,
-                color: black,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 100.h),
+              Text(
+                'Set Location',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22.sp,
+                  color: black,
+                ),
               ),
-            ),
-            SizedBox(height: 24.h),
-            Text(
-              'Set your location and address',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: grey,
-              ),
-            ),
-            SizedBox(height: 48.h),
-            customTextField(
-              controller: locationFieldController,
-              hintText: 'Address',
-              prefixIconPath: 'assets/images/location_icon.png',
-            ),
-            SizedBox(height: 48.h),
-            Center(
-              child: Text(
-                'Automatically Fill Address',
+              SizedBox(height: 24.h),
+              Text(
+                'Set your location and address',
                 style: TextStyle(
                   fontSize: 14.sp,
                   color: grey,
                 ),
               ),
-            ),
-            SizedBox(height: 10.h),
-            Center(
-              child: OutlinedButton(
-                onPressed: () async {
-                  if (locationViewModel.locationServiceState ==
-                      LocationServiceState.enabled) {
-                    //---------Location is Enabled-----------------
-                    try {
-                      await locationViewModel.getCurrentLocation();
-                      locationFieldController.text =
-                          locationViewModel.locationAddress!;
-                    } on CustomException catch (error) {
+              SizedBox(height: 48.h),
+              customTextField(
+                controller: locationFieldController,
+                hintText: 'Address',
+                prefixIconPath: 'assets/images/location_icon.png',
+              ),
+              SizedBox(height: 48.h),
+              Center(
+                child: Text(
+                  'Automatically Fill Address',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: grey,
+                  ),
+                ),
+              ),
+              SizedBox(height: 10.h),
+              Center(
+                child: OutlinedButton(
+                  onPressed: () async {
+                    if (locationViewModel.locationServiceState ==
+                        LocationServiceState.enabled) {
+                      //---------Location is Enabled-----------------
+                      try {
+                        await locationViewModel.getCurrentLocation();
+                        locationFieldController.text =
+                            locationViewModel.locationAddress!;
+                      } on CustomException catch (error) {
+                        showAlertDialogue(
+                          context: context,
+                          title: error.prefix,
+                          message: error.message,
+                        );
+                      }
+                    } else {
                       showAlertDialogue(
                         context: context,
-                        title: error.prefix,
-                        message: error.message,
+                        title: 'Location is not enabled',
+                        message: 'Enable your location to continue',
                       );
                     }
-                  } else {
-                    showAlertDialogue(
-                      context: context,
-                      title: 'Location is not enabled',
-                      message: 'Enable your location to continue',
-                    );
-                  }
-                },
-                child: const Text('Get My Location'),
+                  },
+                  child: const Text('Get My Location'),
+                ),
               ),
-            ),
-            SizedBox(height: 48.h),
-            Center(
-              child: locationViewModel.fetchingLocationState ==
-                          FetchingLocationState.loading ||
-                      authViewModel.authStatus == AuthStatus.loading
-                  ? loadingIndicator
-                  : FloatingActionButton.extended(
-                      onPressed: () async {
-                        try {
-                          await authViewModel.signUp(
-                              email: arguments['email'],
-                              password: arguments['password'],
-                              phoneNumber: arguments['mobileNumber'],
-                              addressLocation: GeoPoint(
-                                  locationViewModel
-                                      .currentLocationData!.latitude!,
-                                  locationViewModel
-                                      .currentLocationData!.longitude!),
-                              address: locationViewModel.locationAddress!,
-                              userName: arguments['userName']);
-                        } on CustomException catch (error) {
-                          showAlertDialogue(
-                              context: context,
-                              title: error.prefix,
-                              message: error.message);
-                        }
-                      },
-                      label: const Text('Submit and Sign in'),
-                      icon: const Icon(Icons.arrow_forward),
-                    ),
-            )
-          ],
+              SizedBox(height: 48.h),
+              Center(
+                child: locationViewModel.fetchingLocationState ==
+                            FetchingLocationState.loading ||
+                        authViewModel.authStatus == AuthStatus.loading
+                    ? loadingIndicator
+                    : FloatingActionButton.extended(
+                        onPressed: () async {
+                          if (locationFieldController.text.isEmpty) {
+                            showSnackBar(
+                                context: context,
+                                message:
+                                    'Fill the address in order to continue');
+                          }
+                          try {
+                            await authViewModel.signUp(
+                                email: arguments['email'],
+                                password: arguments['password'],
+                                phoneNumber: arguments['mobileNumber'],
+                                addressLocation: GeoPoint(
+                                    locationViewModel
+                                        .currentLocationData!.latitude!,
+                                    locationViewModel
+                                        .currentLocationData!.longitude!),
+                                address: locationViewModel.locationAddress!,
+                                userName: arguments['userName']);
+                            Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const MapScreenView()),
+                                ModalRoute.withName(Routes.signInScreen));
+                          } on CustomException catch (error) {
+                            showAlertDialogue(
+                                context: context,
+                                title: error.prefix,
+                                message: error.message);
+                          }
+                        },
+                        label: const Text('Submit and Sign in'),
+                        icon: const Icon(Icons.arrow_forward),
+                      ),
+              )
+            ],
+          ),
         ),
       ),
     );
